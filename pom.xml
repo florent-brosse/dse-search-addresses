@@ -16,12 +16,18 @@
 
 	<properties>
 		<java.version>11</java.version>
+		<dse-java-driver-version>2.0.1</dse-java-driver-version>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.datastax.dse</groupId>
+			<artifactId>dse-java-driver-core</artifactId>
+			<version>${dse-java-driver-version}</version>
 		</dependency>
 
 		<dependency>

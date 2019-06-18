@@ -6,8 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SearchAddressesApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(SearchAddressesApplication.class, args);
-	}
+
+    public static void main(String[] args) {
+        SpringApplication.run(SearchAddressesApplication.class, args);
+    }
 
 }
