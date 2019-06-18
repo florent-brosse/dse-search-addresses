@@ -32,18 +32,35 @@ public class AddressDao {
 
     public Flux<Address> search(String address) {
 
-        String query = makeSearch(address.replace("\""," "));
+        String query = makeSearch(address.replace("\"", " "));
         System.out.println(query);
         BoundStatement searchStatement = solrPreparedStatement.bind(query).setIdempotent(true);
         ReactiveResultSet rs = dseSession.executeReactive(searchStatement);
         return Flux.from(rs).map(rowMapper);
     }
 
+    //add * to the last element and fuzzy search
     private String makeSearch(String address) {
-        var strings = Arrays.stream(address.split("\\s+")).map(s -> {
+        address = address.endsWith(" ") ? address : (address + "*");
+        String[] split = address.split("\\s+");
+        String[] splitWithoutLastElement =  Arrays.copyOf(split, split.length-1);
+        var strings = Arrays.stream(splitWithoutLastElement).map(s -> {
             if (s.matches("\\d+")) return s;
-            else return s + "~";
+            else return s + "~1";
         }).collect(Collectors.toList());
-        return "{\"q\":\"full_address:(" + String.join(" AND ", strings) + "*)\"}";
+        strings.add(split[split.length-1]);
+        return "{\"q\":\"full_address:(" + String.join(" AND ", strings) + ")\",\"sort\":\"score desc\"}";
+    }
+
+    private String makeSimpleSearch(String address) {
+        var strings = address.split("\\s+");
+        return "{\"q\":\"full_address:(" + String.join(" AND ", strings) + ")\",\"sort\":\"score desc\"}";
+    }
+
+    //add * to the last element but no fuzzy search
+    private String makeSimple2Search(String address) {
+        address = address.endsWith(" ") ? address : (address + "*");
+        var strings = address.split("\\s+");
+        return "{\"q\":\"full_address:(" + String.join(" AND ", strings) + ")\",\"sort\":\"score desc\"}";
     }
 }

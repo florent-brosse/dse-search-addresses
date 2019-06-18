@@ -19,6 +19,9 @@ public class Controller {
 
     @GetMapping("/search")
     private Flux<Address> searchAddress(@RequestParam(value = "address", required = true) String address) {
+        if (address == null || address.length() < 4) {
+            return Flux.empty();
+        }
         return dao.search(address);
     }
 }

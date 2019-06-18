@@ -1,10 +1,131 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 </head>
 <body>
-<h2>Page 1</h2>
+<div id="app">
+    <v-app id="inspire">
+        <v-card
+                color="red lighten-2"
+                dark
+        >
+            <v-card-title class="headline red lighten-3">
+                Search French addresses
+            </v-card-title>
+            <v-card-text>
+                <a href="https://www.data.gouv.fr/fr/datasets/base-d-adresses-nationale-ouverte-bano/">Base d'Adresses Nationale Ouverte - BANO </a>
+            </v-card-text>
+            <v-card-text>
+                <v-autocomplete
+                        v-model="model"
+                        :items="items"
+                        :loading="isLoading"
+                        :search-input.sync="search"
+                        color="white"
+                        hide-no-data
+                        no-filter
+                        item-text="Description"
+                        item-value="id"
+                        label="French addresses"
+                        placeholder="Start typing to Search"
+                        prepend-icon="mdi-database-search"
+                        return-object
+                ></v-autocomplete>
+            </v-card-text>
+            <v-divider></v-divider>
+            <v-expand-transition>
+                <v-list v-if="model" class="red lighten-3">
+                    <v-list-tile
+                            v-for="(field, i) in fields"
+                            :key="i"
+                    >
+                        <v-list-tile-content>
+                            <v-list-tile-title v-text="field.value"></v-list-tile-title>
+                            <v-list-tile-sub-title v-text="field.key"></v-list-tile-sub-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                </v-list>
+            </v-expand-transition>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                        :disabled="!model"
+                        color="grey darken-3"
+                        @click="model = null"
+                >
+                    Clear
+                    <v-icon right>mdi-close-circle</v-icon>
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-app>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+<script>
+    new Vue({
+  el: '#app',
+  data: () => ({
+    descriptionLimit: 60,
+    entries: [],
+    isLoading: false,
+    model: null,
+    search: null
+  }),
+
+  computed: {
+    fields () {
+      if (!this.model) return []
+
+      return Object.keys(this.model).map(key => {
+        return {
+          key,
+          value: this.model[key] || 'n/a'
+        }
+      })
+    },
+    items () {
+      return this.entries.map(entry => {
+        const Description =  entry.num +' '+ entry.type +' '+ entry.zipcode +' ' + entry.city +' '
+       // console.log(Description)
+        return Object.assign({}, entry, { Description })
+      })
+    }
+  },
+
+  watch: {
+    search (val) {
+      // Items have already been loaded
+      //if (this.items.length > 0) return
+
+      // Items have already been requested
+      if (this.isLoading) return
+
+      this.isLoading = true
+
+      // Lazily load input items
+      var url = new URL("http://localhost:8080/api/search"),
+      params = {address: val}
+      Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+      fetch(url)
+        .then(res => res.json())
+        .then(res => {
+         // const { entries } = res
+         // this.count = count
+          this.entries = res
+          console.log(val +' '+res.length)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+        .finally(() => (this.isLoading = false))
+    }
+  }
+})
+  </script>
 </body>
 </html>
