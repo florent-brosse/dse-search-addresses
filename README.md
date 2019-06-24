@@ -213,7 +213,7 @@ change long_lat -> coords
 
 
 
-
+curl http://localhost:8080/api/search?address=73c%20av%20Gambeta%2075020
 
 
 

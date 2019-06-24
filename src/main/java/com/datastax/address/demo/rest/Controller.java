@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api")
@@ -23,5 +24,10 @@ public class Controller {
             return Flux.empty();
         }
         return dao.search(address);
+    }
+
+    @GetMapping("/findAddress")
+    private Mono<Address> findAddress(@RequestParam(value = "localisation", required = true) String localisation) {
+         return dao.findAddress(localisation);
     }
 }

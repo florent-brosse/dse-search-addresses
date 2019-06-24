@@ -19,6 +19,9 @@
                 <a href="https://www.data.gouv.fr/fr/datasets/base-d-adresses-nationale-ouverte-bano/">Base d'Adresses Nationale Ouverte - BANO </a>
             </v-card-text>
             <v-card-text>
+                <button v-on:click="geolocation">Find me</button>
+            </v-card-text>
+            <v-card-text>
                 <v-autocomplete
                         v-model="model"
                         :items="items"
@@ -74,7 +77,8 @@
     entries: [],
     isLoading: false,
     model: null,
-    search: null
+    search: null,
+    localisation: null
   }),
 
   computed: {
@@ -96,9 +100,42 @@
       })
     }
   },
+   methods: {
+
+   geolocation() {
+      navigator.geolocation.getCurrentPosition(this.buildUrl, this.geoError);
+    },
+    buildUrl(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      this.localisation= lat + ',' + lon ;
+      var url = new URL("http://localhost:8080/api/findAddress"),
+      params = {localisation: this.localisation}
+      Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+      fetch(url)
+        .then(res => res.json())
+        .then(res => {
+         this.search = res.num +' ' + res.type +' ' + res.zipcode +' ' + res.city;
+         res.Description=this.search;
+         this.entries = [res];
+         this.model=res;
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
+    geoError(error) {
+      alert("error geolocalization not available")
+    }
+
+   },
 
   watch: {
     search (val) {
+     if(!val){
+       return;
+       }
       // Items have already been loaded
       //if (this.items.length > 0) return
 
@@ -125,7 +162,7 @@
         .finally(() => (this.isLoading = false))
     }
   }
-})
+});
   </script>
 </body>
 </html>
