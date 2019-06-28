@@ -1,6 +1,6 @@
 # Search addresses with DSE
 
-This project show how to use DSE to search into the French addresses database (Bano) available here: https://www.data.gouv.fr/fr/datasets/base-d-adresses-nationale-ouverte-bano/.
+This project shows how to use DSE to search into the French addresses database (Bano) available here: https://www.data.gouv.fr/fr/datasets/base-d-adresses-nationale-ouverte-bano/.
 It uses DSE Search to execute solr queries to look at your closest addresses, and to autocomplete addresses.
 It uses DSE Analytics to load the data from the big CSV file.
 It uses Spring Boot with the new 2.0 java driver. This version could be set up without code only conf files.
