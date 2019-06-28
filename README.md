@@ -16,7 +16,7 @@ This project uses the last current version of DSE 6.7.3
 
 ```cql
 CREATE KEYSPACE poc WITH replication = {'class': 'SimpleStrategy' , 'replication_factor': 1 };
-CREATE TABLE poc.address ( id text PRIMARY KEY , num text, type text, zipcode text, city text, long_lat 'PointType');
+CREATE TABLE poc.address ( id text PRIMARY KEY , num text, type text, zipcode text, city text, coord 'PointType');
 ```
 
 ## Create the search index
@@ -58,7 +58,7 @@ cat <<EOF > schema.xml
     <field indexed="false" multiValued="false" name="zipcode" type="StrField"/>
     <field docValues="true" indexed="true" multiValued="false" name="id" type="StrField"/>
     <field docValues="false" indexed="true" multiValued="true" name="full_address" type="TextField"/>
-    <field indexed="true" multiValued="false" name="long_lat" type="SpatialRecursivePrefixTreeFieldType"/>
+    <field indexed="true" multiValued="false" name="coord" type="SpatialRecursivePrefixTreeFieldType"/>
     <copyField source="num" dest="full_address" />
     <copyField source="type" dest="full_address" />
     <copyField source="city" dest="full_address" />
@@ -88,17 +88,17 @@ dsetool reload_core poc.address solrconfig=config.xml schema=schema.xml deleteAl
 
 ```scala
 val df=spark.read.format("csv").option("header", "false").load("file:///home/florent/Downloads/full.csv").toDF("id","num","type","zipcode","city","source","lat","long")
-df.withColumn("long_lat", concat(lit("POINT("),'long,lit(" "),'lat,lit(")"))).drop("source","lat","long").write.cassandraFormat("address","poc").option("confirm.truncate","true").mode(org.apache.spark.sql.SaveMode.Overwrite).save
+df.withColumn("coord", concat(lit("POINT("),'long,lit(" "),'lat,lit(")"))).drop("source","lat","long").write.cassandraFormat("address","poc").option("confirm.truncate","true").mode(org.apache.spark.sql.SaveMode.Overwrite).save
 ```
 
 
 ## Example of queries
 ```
 select count(*) from poc.address where solr_query='{"q":"*:*"}';
-select * from poc.address where solr_query='{"q":"*:*","fq":"{!geofilt sfield=long_lat pt=48.856613,2.352222 d=20.0 cache=false}"}';
+select * from poc.address where solr_query='{"q":"*:*","fq":"{!geofilt sfield=coord pt=48.856613,2.352222 d=20.0 cache=false}"}';
 select * from poc.address WHERE solr_query='{"q":"full_address:(73C AND av AND gamb* AND PAris~) "}';
-select * from poc.address WHERE solr_query='{"q":"+full_address:(73 AND av AND gambetta) OR {!geofilt sfield=long_lat pt=48.856613,2.352222 d=10.0 score=kilometers}^100"}';
-select * from poc.address WHERE solr_query='{"q":"+full_address:(73 AND av ) OR {!geofilt sfield=long_lat pt=43.71613,7.262222 d=50.0 score=recipDistance}","sort":"score desc"}' limit 10;
+select * from poc.address WHERE solr_query='{"q":"+full_address:(73 AND av AND gambetta) OR {!geofilt sfield=coord pt=48.856613,2.352222 d=10.0 score=kilometers}^100"}';
+select * from poc.address WHERE solr_query='{"q":"+full_address:(73 AND av ) OR {!geofilt sfield=coord pt=43.71613,7.262222 d=50.0 score=recipDistance}","sort":"score desc"}' limit 10;
 ```
 
 ## Launch the application
