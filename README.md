@@ -84,11 +84,11 @@ dsetool reload_core poc.address solrconfig=config.xml schema=schema.xml deleteAl
 ```
 
 ## Load data into DSE with spark
-`dse spark` to launch a spark shell
+`dse spark --conf spark.cassandra.output.batch.grouping.buffer.size=1 --conf spark.cassandra.output.concurrent.writes=2000` to launch a spark shell
 
 ```scala
 val df=spark.read.format("csv").option("header", "false").load("file:///home/florent/Downloads/full.csv").toDF("id","num","type","zipcode","city","source","lat","long")
-df.withColumn("coord", concat(lit("POINT("),'long,lit(" "),'lat,lit(")"))).drop("source","lat","long").write.cassandraFormat("address","poc").option("confirm.truncate","true").mode(org.apache.spark.sql.SaveMode.Overwrite).save
+df.withColumn("coord", concat(lit("POINT("),'long,lit(" "),'lat,lit(")"))).drop("source","lat","long").filter("city is not null AND type is not null AND coord is not null AND num is not null").write.cassandraFormat("address","poc").option("confirm.truncate","true").mode(org.apache.spark.sql.SaveMode.Overwrite).save
 ```
 
 
